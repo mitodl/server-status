@@ -8,10 +8,8 @@ Notes:
 * Different services provide different information, but all should return
   UP, DOWN, or NO_CONFIG for the "status" key.
 """
-from __future__ import unicode_literals
 from datetime import datetime
 import logging
-import OpenSSL.crypto
 
 from django.conf import settings
 from django.http import JsonResponse, Http404
@@ -143,7 +141,7 @@ def get_celery_info():
         # is made lazily
         app.connection().ensure_connection(max_retries=1)
 
-        celery_stats = celery.task.control.inspect().stats()
+        celery_stats = celery.app.control.inspect().stats()
         if not celery_stats:
             log.error("No running Celery workers were found.")
             return {"status": DOWN, "message": "No running Celery workers"}
@@ -157,6 +155,8 @@ def get_certificate_info():
     """
     checks app certificate expiry status
     """
+    import OpenSSL.crypto
+
     if hasattr(settings, 'MIT_WS_CERTIFICATE') and settings.MIT_WS_CERTIFICATE:
         mit_ws_certificate = settings.MIT_WS_CERTIFICATE
     else:
